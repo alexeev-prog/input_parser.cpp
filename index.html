@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>input_parser.cpp - Advanced Command-Line Parser for C++</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --bg-highlight: #252525;
+            --primary: #4dabf7;
+            --primary-dark: #3b8cc4;
+            --secondary: #15aabf;
+            --accent: #ff922b;
+            --success: #40c057;
+            --warning: #fab005;
+            --error: #ff6b6b;
+            --text: #e9ecef;
+            --text-light: #f8f9fa;
+            --text-muted: #adb5bd;
+            --border: #343a40;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --radius: 12px;
+            --radius-sm: 6px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #0d0d0d 100%);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        header {
+            background: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--text-light);
+        }
+
+        .logo-text {
+            font-family: 'Fira Code', monospace;
+            font-weight: 700;
+            font-size: 1.8rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav ul {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        nav a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            position: relative;
+            padding: 0.5rem 0;
+            transition: var(--transition);
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: var(--transition);
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        .hero {
+            padding: 8rem 0 6rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(77, 171, 247, 0.05) 0%, transparent 70%);
+            z-index: -1;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, var(--text-light), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            max-width: 800px;
+            margin: 0 auto 3rem;
+            color: var(--text-muted);
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--text-light);
+            box-shadow: 0 5px 15px rgba(77, 171, 247, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(77, 171, 247, 0.5);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .badges {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-highlight);
+            color: var(--text);
+            padding: 0.5rem 1.25rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            border: 1px solid var(--border);
+        }
+
+        .badge:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+            box-shadow: 0 5px 15px rgba(77, 171, 247, 0.2);
+        }
+
+        section {
+            padding: 6rem 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-light);
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-header h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+
+        .section-header p {
+            font-size: 1.25rem;
+            max-width: 700px;
+            margin: 0 auto;
+            color: var(--text-muted);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 2.5rem 2rem;
+            transition: var(--transition);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-light);
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+        }
+
+        .code-container {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin: 3rem 0;
+            box-shadow: var(--shadow);
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: var(--bg-highlight);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-family: 'Fira Code', monospace;
+            color: var(--text);
+        }
+
+        .code-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .code-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: var(--transition);
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .code-btn:hover {
+            color: var(--primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        pre, code {
+            font-family: 'Fira Code', monospace;
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
+            overflow-x: auto;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        pre {
+            padding: 1.5rem;
+            margin: 0;
+        }
+
+        code {
+            color: var(--text-light);
+        }
+
+        .code-block {
+            position: relative;
+        }
+
+        .code-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+        }
+
+        .api-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .api-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 2rem;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .api-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .api-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .api-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--text-light);
+        }
+
+        .api-card h3 {
+            font-size: 1.5rem;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .api-card .api-type {
+            color: var(--primary);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+        }
+
+        .api-card pre {
+            background: var(--bg-highlight);
+            padding: 1rem;
+            border-radius: var(--radius-sm);
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .api-card p {
+            color: var(--text-muted);
+            margin: 1rem 0;
+        }
+
+        .api-card ul {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .api-card li {
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        .diagram-container {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 2rem;
+            border: 1px solid var(--border);
+            margin: 3rem 0;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .diagram-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .diagram-header h3 {
+            font-size: 1.8rem;
+            color: var(--text-light);
+        }
+
+        .diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            position: relative;
+        }
+
+        .diagram::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+            z-index: 1;
+        }
+
+        .diagram-step {
+            display: flex;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .diagram-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--bg-highlight);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--primary);
+            flex-shrink: 0;
+            border: 2px solid var(--primary);
+        }
+
+        .diagram-content {
+            background: var(--bg-highlight);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            flex: 1;
+            margin-left: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .diagram-content h4 {
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .diagram-content p {
+            color: var(--text-muted);
+        }
+
+        .alternate .diagram-content {
+            margin-left: 0;
+            margin-right: 2rem;
+        }
+
+        .alternate {
+            flex-direction: row-reverse;
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 4rem 0;
+        }
+
+        .comparison-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 2rem;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .comparison-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+
+        .comparison-card h3 {
+            font-size: 1.5rem;
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .comparison-card ul {
+            list-style: none;
+        }
+
+        .comparison-card li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .comparison-card li:last-child {
+            border-bottom: none;
+        }
+
+        .comparison-card .icon {
+            color: var(--success);
+            font-size: 1.2rem;
+        }
+
+        .comparison-card .icon.error {
+            color: var(--error);
+        }
+
+        .comparison-card.best::before {
+            content: 'RECOMMENDED';
+            position: absolute;
+            top: 20px;
+            right: -30px;
+            background: var(--primary);
+            color: var(--text-light);
+            padding: 0.25rem 2rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transform: rotate(45deg);
+        }
+
+        footer {
+            background: var(--bg-highlight);
+            padding: 4rem 0 2rem;
+            border-top: 1px solid var(--border);
+            margin-top: 4rem;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-col h4 {
+            font-size: 1.3rem;
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 0.75rem;
+        }
+
+        .footer-col h4::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-col a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .footer-col a:hover {
+            color: var(--primary);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            transition: var(--transition);
+            border: 1px solid var(--border);
+        }
+
+        .social-link:hover {
+            background: var(--primary);
+            color: var(--text-light);
+            transform: translateY(-3px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 992px) {
+            .hero h1 {
+                font-size: 3rem;
+            }
+            
+            nav ul {
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-inner {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            
+            nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .hero {
+                padding: 6rem 0 4rem;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.2rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .diagram-step {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .diagram-content {
+                margin: 1rem 0 0 0;
+                width: 100%;
+            }
+            
+            .alternate .diagram-content {
+                margin: 1rem 0 0 0;
+            }
+            
+            .diagram::before {
+                left: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-inner">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-terminal"></i>
+                    </div>
+                    <div class="logo-text">input_parser.cpp</div>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#features"><i class="fas fa-star"></i> Features</a></li>
+                        <li><a href="#usage"><i class="fas fa-code"></i> Usage</a></li>
+                        <li><a href="#api"><i class="fas fa-book"></i> API</a></li>
+                        <li><a href="#workflow"><i class="fas fa-project-diagram"></i> Workflow</a></li>
+                        <li><a href="#comparison"><i class="fas fa-balance-scale"></i> Comparison</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Advanced Command-Line Parsing for Modern C++</h1>
+            <p>A robust, lightweight library for parsing command-line arguments with strict validation, automatic help generation, and intuitive API.</p>
+            
+            <div class="cta-buttons">
+                <a href="#usage" class="btn btn-primary">
+                    <i class="fas fa-rocket"></i> Get Started
+                </a>
+                <a href="https://github.com/alexeev-prog/input_parser.cpp" class="btn btn-secondary">
+                    <i class="fab fa-github"></i> View on GitHub
+                </a>
+            </div>
+            
+            <div class="badges">
+                <div class="badge">
+                    <i class="fas fa-cube"></i> Header-only
+                </div>
+                <div class="badge">
+                    <i class="fas fa-bolt"></i> Zero Dependencies
+                </div>
+                <div class="badge">
+                    <i class="fas fa-shield-alt"></i> MIT Licensed
+                </div>
+                <div class="badge">
+                    <i class="fas fa-microchip"></i> C++17
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Powerful Features</h2>
+                <p>Designed with modern C++ best practices, input_parser.cpp provides a comprehensive solution for command-line interfaces</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3>Clean Syntax</h3>
+                    <p>Intuitive API with modern C++ constructs. Define options using designated initializers for maximum readability.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    <h3>Strict Validation</h3>
+                    <p>Comprehensive error checking with detailed messages. Collects all errors during parsing for complete diagnostics.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h3>Automatic Help</h3>
+                    <p>Beautifully formatted help messages generated automatically based on your option definitions.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <h3>Flexible Syntax</h3>
+                    <p>Supports all common CLI formats: short options, long options, equals syntax, and mixed formats.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bug"></i>
+                    </div>
+                    <h3>Error Resilience</h3>
+                    <p>Continues parsing after encountering errors to provide complete diagnostic information.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <h3>High Performance</h3>
+                    <p>Optimized for minimal overhead with O(1) lookups and efficient memory usage.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="usage" style="background: rgba(30, 30, 30, 0.5);">
+        <div class="container">
+            <div class="section-header">
+                <h2>Getting Started</h2>
+                <p>Integrate input_parser.cpp into your project in minutes with these simple examples</p>
+            </div>
+            
+            <div class="code-container">
+                <div class="code-header">
+                    <div class="code-title">
+                        <i class="fas fa-file-code"></i>
+                        <span>basic_usage.cpp</span>
+                    </div>
+                    <div class="code-actions">
+                        <button class="code-btn" title="Copy">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="code-block">
+                    <pre><code>#include "input_parser.hpp"
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+
+int main(int argc, char** argv) {
+    // Initialize parser with program metadata
+    InputParser parser("imgproc", "Advanced image processing utility");
+    
+    // Define command-line options
+    parser.add_option({
+        .short_name = "-v",
+        .long_name = "--verbose",
+        .description = "Enable verbose output mode",
+        .requires_argument = false
+    });
+    
+    parser.add_option({
+        .short_name = "-i",
+        .long_name = "--input",
+        .description = "Input image path",
+        .requires_argument = true,
+        .arg_placeholder = "PATH"
+    });
+    
+    parser.add_option({
+        .short_name = "-o",
+        .long_name = "--output",
+        .description = "Output image path",
+        .requires_argument = true,
+        .arg_placeholder = "PATH"
+    });
+    
+    parser.add_option({
+        .short_name = "-q",
+        .long_name = "--quality",
+        .description = "Output quality (1-100)",
+        .requires_argument = true,
+        .arg_placeholder = "VALUE"
+    });
+    
+    // Parse command-line arguments
+    if (!parser.parse(argc, argv)) {
+        // Handle parsing errors
+        std::cerr << "Error parsing arguments:\n";
+        for (const auto& error : parser.get_errors()) {
+            std::cerr << " • " << error << "\n";
+        }
+        std::cerr << "\n" << parser.generate_help();
+        return EXIT_FAILURE;
+    }
+    
+    // Check for verbose flag
+    if (parser.has_option("--verbose")) {
+        std::cout << "Verbose mode enabled\n";
+    }
+    
+    // Retrieve input file (required)
+    auto input_file = parser.get_argument("--input");
+    if (!input_file) {
+        std::cerr << "Error: Input file is required\n";
+        return EXIT_FAILURE;
+    }
+    
+    // Retrieve output file (required)
+    auto output_file = parser.get_argument("--output");
+    if (!output_file) {
+        std::cerr << "Error: Output file is required\n";
+        return EXIT_FAILURE;
+    }
+    
+    // Retrieve optional quality setting
+    int quality = 90;
+    if (auto q = parser.get_argument("--quality")) {
+        try {
+            quality = std::stoi(*q);
+            if (quality < 1 || quality > 100) {
+                throw std::out_of_range("Invalid quality value");
+            }
+        } catch (...) {
+            std::cerr << "Error: Invalid quality value: " << *q << "\n";
+            return EXIT_FAILURE;
+        }
+    }
+    
+    std::cout << "Processing image:\n";
+    std::cout << "  Input: " << *input_file << "\n";
+    std::cout << "  Output: " << *output_file << "\n";
+    std::cout << "  Quality: " << quality << "\n";
+    
+    // Access positional arguments
+    auto positional = parser.get_positional_args();
+    if (!positional.empty()) {
+        std::cout << "\nPositional arguments:\n";
+        for (const auto& arg : positional) {
+            std::cout << " • " << arg << "\n";
+        }
+    }
+    
+    return EXIT_SUCCESS;
+}</code></pre>
+                </div>
+            </div>
+            
+            <div class="code-container">
+                <div class="code-header">
+                    <div class="code-title">
+                        <i class="fas fa-terminal"></i>
+                        <span>Example Usage</span>
+                    </div>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-bash"># Valid command with all options
+./imgproc -v -i input.jpg -o output.png --quality=95
+
+# Mixed short and long options
+./imgproc --verbose -i input.jpg -o output.png
+
+# With positional arguments
+./imgproc input.jpg -o output.png -- additional_file.txt
+
+# Invalid command (missing required argument)
+./imgproc -v -i input.jpg
+# Output: Error: Output file is required</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="api">
+        <div class="container">
+            <div class="section-header">
+                <h2>API Reference</h2>
+                <p>Comprehensive documentation of all classes, methods, and configuration options</p>
+            </div>
+            
+            <div class="api-section">
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <div>
+                            <h3>InputParser</h3>
+                            <div class="api-type">Class</div>
+                        </div>
+                    </div>
+                    
+                    <p>The core class for defining and parsing command-line arguments.</p>
+                    
+                    <pre><code>InputParser(std::string program_name, 
+           std::string description)</code></pre>
+                    
+                    <p><strong>Parameters:</strong></p>
+                    <ul>
+                        <li><code>program_name</code>: Application name for help output</li>
+                        <li><code>description</code>: Brief description of your application</li>
+                    </ul>
+                </div>
+                
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <div>
+                            <h3>add_option()</h3>
+                            <div class="api-type">Method</div>
+                        </div>
+                    </div>
+                    
+                    <p>Registers a new command-line option with the parser.</p>
+                    
+                    <pre><code>void add_option(const Option& opt)</code></pre>
+                    
+                    <p><strong>Throws:</strong> <code>std::invalid_argument</code> if option names are duplicated or invalid.</p>
+                    
+                    <p><strong>Example:</strong></p>
+                    <pre><code>parser.add_option({
+    .short_name = "-h",
+    .long_name = "--help",
+    .description = "Show help message",
+    .requires_argument = false
+});</code></pre>
+                </div>
+                
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div>
+                            <h3>has_option()</h3>
+                            <div class="api-type">Method</div>
+                        </div>
+                    </div>
+                    
+                    <p>Checks if an option was provided in the command line.</p>
+                    
+                    <pre><code>bool has_option(const std::string& name) const</code></pre>
+                    
+                    <p>Accepts both short and long option names. Returns <code>true</code> if the option was found.</p>
+                    
+                    <p><strong>Example:</strong></p>
+                    <pre><code>if (parser.has_option("--verbose")) {
+    enable_logging();
+}</code></pre>
+                </div>
+                
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div>
+                            <h3>get_argument()</h3>
+                            <div class="api-type">Method</div>
+                        </div>
+                    </div>
+                    
+                    <p>Retrieves the argument value for an option if it exists.</p>
+                    
+                    <pre><code>std::optional&lt;std::string&gt; 
+get_argument(const std::string& name) const</code></pre>
+                    
+                    <p>Returns the argument value if present, or <code>std::nullopt</code> if the option wasn't found or has no argument.</p>
+                    
+                    <p><strong>Example:</strong></p>
+                    <pre><code>if (auto file = parser.get_argument("--input")) {
+    process_file(*file);
+}</code></pre>
+                </div>
+                
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-icon">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <div>
+                            <h3>get_positional_args()</h3>
+                            <div class="api-type">Method</div>
+                        </div>
+                    </div>
+                    
+                    <p>Returns a list of all positional arguments.</p>
+                    
+                    <pre><code>const std::vector&lt;std::string&gt;& 
+get_positional_args() const</code></pre>
+                    
+                    <p>Positional arguments are all arguments that are not options and not arguments to options.</p>
+                    
+                    <p><strong>Example:</strong></p>
+                    <pre><code>for (const auto& file : parser.get_positional_args()) {
+    process_file(file);
+}</code></pre>
+                </div>
+                
+                <div class="api-card">
+                    <div class="api-header">
+                        <div class="api-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div>
+                            <h3>get_errors()</h3>
+                            <div class="api-type">Method</div>
+                        </div>
+                    </div>
+                    
+                    <p>Returns a list of parsing errors encountered during the last parse operation.</p>
+                    
+                    <pre><code>const std::vector&lt;std::string&gt;& 
+get_errors() const</code></pre>
+                    
+                    <p>Each error is a human-readable string describing a specific parsing issue.</p>
+                    
+                    <p><strong>Example:</strong></p>
+                    <pre><code>for (const auto& error : parser.get_errors()) {
+    std::cerr << "Error: " << error << "\n";
+}</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="workflow" style="background: rgba(30, 30, 30, 0.5);">
+        <div class="container">
+            <div class="section-header">
+                <h2>Parsing Workflow</h2>
+                <p>Understanding the internal process of command-line argument parsing</p>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="diagram-header">
+                    <h3>Parsing Sequence Diagram</h3>
+                </div>
+                
+                <div class="diagram">
+                    <div class="diagram-step">
+                        <div class="diagram-icon">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <div class="diagram-content">
+                            <h4>Initialization</h4>
+                            <p>Create InputParser instance with program name and description. Register all options with add_option().</p>
+                        </div>
+                    </div>
+                    
+                    <div class="diagram-step alternate">
+                        <div class="diagram-icon">
+                            <i class="fas fa-terminal"></i>
+                        </div>
+                        <div class="diagram-content">
+                            <h4>Argument Tokenization</h4>
+                            <p>Split command-line arguments into tokens. Identify option prefixes (-, --) and positional arguments.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="diagram-step">
+                        <div class="diagram-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="diagram-content">
+                            <h4>Option Identification</h4>
+                            <p>For each token, determine if it's a known option (short or long form). Handle equals-syntax options (--file=path.txt).</p>
+                        </div>
+                    </div>
+                    
+                    <div class="diagram-step alternate">
+                        <div class="diagram-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="diagram-content">
+                            <h4>Argument Validation</h4>
+                            <p>Verify that required arguments are present. Check that options expecting no arguments don't have them.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="diagram-step">
+                        <div class="diagram-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="diagram-content">
+                            <h4>Storage</h4>
+                            <p>Store parsed values in internal data structures. Track positional arguments separately.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="diagram-step alternate">
+                        <div class="diagram-icon">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <div class="diagram-content">
+                            <h4>Result Compilation</h4>
+                            <p>Compile all parsing errors. Return true if no errors, false otherwise.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="comparison">
+        <div class="container">
+            <div class="section-header">
+                <h2>Why Choose input_parser.cpp?</h2>
+                <p>Comparison with other command-line parsing solutions for C++</p>
+            </div>
+            
+            <div class="comparison">
+                <div class="comparison-card">
+                    <h3><i class="fas fa-flag"></i> Traditional Approaches</h3>
+                    <ul>
+                        <li>
+                            <span class="icon error"><i class="fas fa-times"></i></span>
+                            Manual argument parsing
+                        </li>
+                        <li>
+                            <span class="icon error"><i class="fas fa-times"></i></span>
+                            No standard validation
+                        </li>
+                        <li>
+                            <span class="icon error"><i class="fas fa-times"></i></span>
+                            Error-prone implementation
+                        </li>
+                        <li>
+                            <span class="icon error"><i class="fas fa-times"></i></span>
+                            No automatic help generation
+                        </li>
+                        <li>
+                            <span class="icon error"><i class="fas fa-times"></i></span>
+                            Limited to simple use cases
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="comparison-card">
+                    <h3><i class="fab fa-github"></i> Existing Libraries</h3>
+                    <ul>
+                        <li>
+                            <span class="icon"><i class="fas fa-check"></i></span>
+                            Structured parsing
+                        </li>
+                        <li>
+                            <span class="icon"><i class="fas fa-check"></i></span>
+                            Basic validation
+                        </li>
+                        <li>
+                            <span class="icon error"><i class="fas fa-times"></i></span>
+                            Complex APIs
+                        </li>
+                        <li>
+                            <span class="icon error"><i class="fas fa-times"></i></span>
+                            External dependencies
+                        </li>
+                        <li>
+                            <span class="icon"><i class="fas fa-check"></i></span>
+                            Help generation
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="comparison-card best">
+                    <h3><i class="fas fa-rocket"></i> input_parser.cpp</h3>
+                    <ul>
+                        <li>
+                            <span class="icon"><i class="fas fa-check"></i></span>
+                            Modern C++ API
+                        </li>
+                        <li>
+                            <span class="icon"><i class="fas fa-check"></i></span>
+                            Comprehensive validation
+                        </li>
+                        <li>
+                            <span class="icon"><i class="fas fa-check"></i></span>
+                            Detailed error reporting
+                        </li>
+                        <li>
+                            <span class="icon"><i class="fas fa-check"></i></span>
+                            Zero dependencies
+                        </li>
+                        <li>
+                            <span class="icon"><i class="fas fa-check"></i></span>
+                            Beautiful help output
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>input_parser.cpp</h4>
+                    <p>A lightweight, robust library for parsing command-line arguments in modern C++ applications.</p>
+                    
+                    <div class="social-links">
+                        <a href="https://github.com/alexeev-prog/input_parser.cpp" class="social-link">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="https://github.com/alexeev-prog" class="social-link">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="https://github.com/alexeev-prog/input_parser.cpp"><i class="fas fa-book"></i> Documentation</a></li>
+                        <li><a href="https://github.com/alexeev-prog/input_parser.cpp"><i class="fas fa-download"></i> Download</a></li>
+                        <li><a href="https://github.com/alexeev-prog/input_parser.cpp"><i class="fas fa-code-branch"></i> GitHub Repository</a></li>
+                        <li><a href="https://github.com/alexeev-prog/input_parser.cpp/issues"><i class="fas fa-bug"></i> Issue Tracker</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                &copy; 2023 input_parser.cpp | Modern Command-Line Parsing for C++ | Created with ❤️ for Developers
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Copy button functionality
+        document.querySelectorAll('.code-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const codeBlock = this.closest('.code-header').nextElementSibling;
+                const text = codeBlock.textContent;
+                
+                navigator.clipboard.writeText(text).then(() => {
+                    const icon = this.querySelector('i');
+                    const originalClass = icon.className;
+                    
+                    icon.className = 'fas fa-check';
+                    
+                    setTimeout(() => {
+                        icon.className = originalClass;
+                    }, 2000);
+                });
+            });
+        });
+        
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                window.scrollTo({
+                    top: targetElement.offsetTop - 100,
+                    behavior: 'smooth'
+                });
+            });
+        });
+        
+        // Add animation to feature cards on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = `fadeInUp 0.6s ease-out forwards`;
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        
+        document.querySelectorAll('.feature-card, .api-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            observer.observe(card);
+        });
+        
+        // Add CSS animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
